@@ -20,9 +20,9 @@ class mset:
 
 def bytes_to_float(byte,option):
     return {
-        'crc32' : int(crc32(bytes(byte, encoding='utf-8'))) / 2**32,
-        #'sha256' : int(sha256(bytes(byte, encoding='utf-8')).hexdigest(), 16) / 2**256,
-        'sha256' : int(sha256(bytes(byte, encoding='utf-8')).hexdigest()[:8], 16) / 2**32,
+        'crc32' : crc32(bytes(byte, encoding='utf-8')) / 2**32,
+        'sha256' : int(sha256(bytes(byte, encoding='utf-8')).hexdigest(), 16) / 2**256,
+        #'sha256' : int(sha256(bytes(byte, encoding='utf-8')).hexdigest()[:8], 16) / 2**32,
         'sha1' : int(sha1(bytes(byte, encoding='utf-8')).hexdigest(), 16) / 2**160,
         'md5' : int(md5(bytes(byte, encoding='utf-8')).hexdigest(), 16) / 2**128,
         'shake128' : int(shake_128(bytes(byte, encoding='utf-8')).hexdigest(1), 16) / 2**8
@@ -188,8 +188,28 @@ def main():
     #zad1(generate_set(10000),10000,"zad5_b.png")
     #zad1c(generate_set(10000),"zad5_c.png")
     #zad2(generate_set(10000),"zad6.png",10000)
-    for alpha in [0.05,0.01,0.005]:
-        zad3(generate_set(10000),"zad7_"+str(alpha)+".png",10000,alpha)
+    #for alpha in [0.05,0.01,0.005]:
+    #    zad3(generate_set(1000),"zad7_"+str(alpha)+".png",1000,alpha)
+    #new_set = generate_set(1000)
+    k = 10
+    numbers = []
+    value = 0
+    for _ in range(1000):
+        a = random.randint(0,1000)
+        numbers.append(a)
+        value = minCount(numbers,'crc32',k)
+    print(len(Counter(numbers).keys()))
+    print(value)
+
+    '''
+    for element in new_set:
+        multiset = mset(element,[])
+        numbers = multiset.get_s()
+        value = minCount(numbers,'crc32',k)
+        results.append(value)
+    print(results)
+    '''
+
 
 if __name__ == '__main__':
     main()
