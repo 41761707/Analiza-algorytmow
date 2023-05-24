@@ -1,0 +1,159 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\title{Zad 40 Analiza algorytmów}
+
+\begin{document}
+
+\section{Treść zadania}
+    (Konserwatny MM) Zaproponuj modyfikację algorytmu Maximal Matching 
+    przedstawionego w notatkach do wykładu, która umożliwi jego działanie 
+    przy dodatkowym założeniu, że każdy proces jest typu A albo B i dwa
+    dwa procesy tego samego typu nie mogą tworzyć pary. Ponadto możesz
+    przyjąć, że typ danego procesu jest z góry zadany i nigdy nie może 
+    zostać zmieniony. Uzasadnij poprawność i zbieżność algorytmu.
+    UWAGA: Jeśli nie zaznaczono inaczej, wszystkie definicje i oznaczenia 
+    są tożsame z wykładem
+
+\section{Sprostowanie}
+    Po konsultacji z dr Lemieszem- Aby zadanie w jego oczach było zupełnie poprawne należy dodać nowy stan, który nazwiemy 
+    \textit{mistake}. Opisuje on sytuacje, gdy w wyniku jakiegoś błędu początkowa preferencja procesu p, była ustawiona
+    na proces q, który nie należy do $N(p)$. Warto zauważyć, że pierwotny algorytm, na którym wzorowana jest ów modyfikacja 
+    nie jest odporny na tego typu błędy, stąd moja pierwotna pomyłka. Dalsza część pracy dodaje wskazany stan do algorytmu
+    oraz rozpatruje o ile zmienia się jego funkcjonowanie (a zmienia się niewiele).
+\section{Rozwiązanie}
+    W celu przedstawienia typu procesu wprowadzimy jednoargumentowy predykat 
+    \textit{typ}.
+    \begin{equation}
+        typ(p) = A \: \oplus \: typ(p) = B
+    \end{equation}
+    Dla każdego procesu p. Dodatkowo dodajemy stan \textit{mistake} zgodnie z intuicją przedstawioną w sprostowaniu. 
+    \begin{equation}
+        mistake(p) \iff pref_{p} = q \: \land \: q \notin N(p)
+    \end{equation}
+    Ponadto modyfikujemy definicję sąsiedztwa (równoważnie możemy dla wszystkich instrukcji algorytmu 
+    oraz stanów procesu, w których sprawdzamy czy q należy do N(p)
+    dodać warunek $typ(p) \neq typ(q)$)
+    \begin{equation}
+        N(p)=\{q:\{p,q\} \in E \land typ(p) \neq typ(q)\}
+    \end{equation}
+    Następnie modyfikujemy algorytm. Dodajemy instrukcję warunkową, która sprawdza przynależność preferencji procesu p 
+    do zbioru jego sąsiadów. Jeśli q do wspomnianego zbioru nie należy, ustawiamy preferencję procesu p na NULL 
+    \begin{equation}
+        if \: pref_{p} = q \: \land \: q \notin N(p) \: \: then \: \: pref_{p} \leftarrow NULL
+    \end{equation}
+    co sprowadza się do zapisu
+    \begin{equation}
+        if \: mistake(p) \: \: then \: \: pref_{p} \leftarrow NULL
+    \end{equation}
+\section{Uzsadnienie poprawności}
+    Zgodnie z Lemat 3 z wykładu: Zachodzą warunki specyfikacji S $\iff$ konfiguracja
+    jest ostateczna (tzn. żaden krok algorytmu nie może zmienić konfiguracji)\\
+    Dowód: $(\Rightarrow)$ Pokażemy, że jeśli zachodzą warunku S to żadna akcja algorytmu nie jest możliwa. \\
+    Przypomnienie: Specyfikację S definiujemy następująco: w każdej poprawnej
+    konfiguracji prawdziwe jest zdanie
+    \begin{equation}
+        (\forall p) (married(p) \: \lor \: single(p))
+    \end{equation}
+    Rozpatrzmy po kolei wszystkie możliwe kroki jakie może wykonać algorytm dla danego procesu:
+    \begin{itemize}
+        \item (Mistake) Proces p musiałby znajdować się w stanie \textit{mistake}, co wykluczamy przez założenia o specyfikacji S
+        \item (Accept proposal) Aby warunek został spełniony, proces p musi nie mieć 
+        dopasowanej żadnej pary (być w stanie \textit{free}) oraz musi istnieć stan q o innym typie, który może przyjąć 
+        p jako parę (czyli musi być w stanie \textit{wait}). Zgodnie z założeniem, aktualnie posiadamy 
+        procesy tylko w dwóch stanach: \textit{single} lub \textit{married}, więc warunek nie zostanie nigdy spełniony
+        \item (Propose) Aby warunek został spełniony, proces p musi nie mieć 
+        dopasowanej żadnej pary (być w stanie \textit{free}), żaden z procesów q o innym typie nie może zadeklarować p
+        jako swoją parę (wtedy zaakceptowalibysmy propozycję) oraz musi istnieć proces q o innym typie bez preferencji, czyli 
+        q również musiałby być w stanie \textit{free}. Procesy mogą być tylko w stanie \textit{single} lub \textit{married}, wykluczamy
+        \item (Unchain) - Proces p musi byc w stanie \textit{chain}, wykluczamy
+    \end{itemize}
+    Wniosek - gdy konfiguracja S spełniona, wykonanie ruchu jest niemożliwe \\
+    $(\Leftarrow)$ Dokonamy sprawdzenia co się stanie z procesem, który nie 
+    jest w stanie \textit{married} bądź \textit{single}. Bez straty ogólności 
+    wybieramy proces p zgodnie z powyższym i dokonujemy sprawdzeń:
+    \begin{itemize}
+        \item Jeśli proces p jest w stanie \textit{mistake} to dochodzi do usunięcia jego preferencji i w zależności od 
+        sąsiedztwa przechodzi do stanu \textit{single} bądź \textit{free} - ruch możliwy
+        \item Jeśli proces p jest w stanie \textit{free} to może:
+        \begin{itemize}
+            \item Przyjąć propozycję od procesu q o innym typie w stanie \textit{wait}
+            \item Dokonać \textit{unchain} jeśli q o innym typie jest w stanie \textit{chain}
+            \item Złożyć propozycję, jeśli q jest w stanie \textit{free}
+        \end{itemize}
+        \item Jeśli proces p jest w stanie \textit{chain} to dokona \textit{unchain}
+        \item Jeśli proces p jest w stanie \textit{wait} to musi istniec proces o stanie \textit{free}
+        i przyjmuje propozycję
+    \end{itemize}
+    Jeśli istnieją stany poza \textit{single} oraz \textit{married} w konfiguracji
+    to zawsze można wykonać ruch, czyli nie jest ona ostateczna.
+\section{Dowód zbieżności}
+    Rozważmy funkcję potencjału $F(t) = (mis,c,f,w,m+s)$ gdzie:
+    \begin{itemize}
+        \item mis - liczba procesów w stanie \textit{mistake}
+        \item c - liczba procesów w stanie \textit{chain}
+        \item f - liczba procesów w stanie \textit{free}
+        \item w - liczba procesów w stanie \textit{wait}
+        \item m+s - liczba procesów w stanie \textit{married} lub \textit{single}
+    \end{itemize}
+    Sprawdźmy zmianę każdego z argumentów przy każdej możliwej egzekucji algorytmu dla jednego procesu:
+    \begin{itemize}
+        \item Mistake: $mistake(p)$ zmienia się na $free(p)$ bądź $single(p)$ w zależności od otoczenia, co trochę komplikuje zapis, jednakże 
+        istotny jest fakt, iż za każdym razem, gdy ów procedura jest spełniona, liczba procesów w stanie mistake, która jest na pierwszej pozycji krotki, maleje.
+        \begin{equation}
+            (mis-1,c,f,w,m+s+1) \prec (mis,c,f,w,m+s)
+        \end{equation}
+        lub
+        \begin{equation}
+            (mis-1,c,f+1,w,m+s) \prec (mis,c,f,w,m+s)
+        \end{equation}
+        Co sprowadza się do
+        \begin{equation}
+            F(t+1) \prec F(t)
+        \end{equation}
+        \item Accept proposal: $free(p)$ i $wait(q)$ zmienia się na $married(p)$ i $married(q)$ (lub single, jeśli nie może w married, ale
+        nas to zbytnio nie interesuje, bo grupujemy married i single razem)
+        \begin{equation}
+            (mis,c,f-1,w-1,m+s+2) \prec (mis,c,f,w,m+s)
+        \end{equation}
+        Element na trzecim miejscu zmniejsza się przy zachowaniu wartości pierwszego i drugiego. Stąd wnioskujemy, iż:
+        \begin{equation}
+            F(t+1) \prec F(t)
+        \end{equation}
+        \item Proposal: $free(p)$ i $free(q)$ zamieniają się w $wait(p)$ i $free(q)$
+        \begin{equation}
+            (mis,c,f-1,w+1,m+s) \prec (mis,c,f,w,m+s)
+        \end{equation}
+        Element na trzecim miejscu zmniejsza się przy zachowaniu wartości pierwszego i drugiego. Stąd wnioskujemy, iż:
+        \begin{equation}
+            F(t+1) \prec F(t)
+        \end{equation}
+        \item Unchain: $chain(p)$ zmienia się na $free(p)$
+        \begin{equation}
+            (mis,c-1,f+1,w,m+s) \prec (mis,c,f,w,m+s)
+        \end{equation}
+        Element na drugim miejscu zmniejsza się przy zachowaniu pierwszego. Stąd wnioskujemy, iż:
+        \begin{equation}
+            F(t+1) \prec F(t)
+        \end{equation}
+    \end{itemize}
+    Zauważamy, że porządek leksykograficzny jest dobrym porządkiem, czyli ma wartość najmniejszą, która w naszym przypadku 
+    wynosi $(0,0,0,0,n)$, czyli wszystkie procesy są \textit{married} lub \textit{single}.
+    Jak sprawdzić zbieżność? Można to zrobić korzystając z reguły \textbf{stars and bars} (będziemy szacować mocno z góry).
+    W opisywanym modelu istnieje 5 zmiennych, każda z nich jest zmienną całkowitą nieujemną $mis,c,f,w,m+s \geq 0$. Wiedząc, iż 
+    liczba procesów jest równa n wnioskujemy, iż w dowolnym kroku t algorytmu suma wszystkich zmiennych musi być równa n (Każdy z procesów może być tylko w jednym staniem w jednym momencie
+    oraz każdy z procesów musi mieć jakiś stan). Stąd:
+    \begin{equation}
+        mis+c+f+w+(m+s) = n
+    \end{equation}
+    Zgodnie z regułą \textbf{stars and bars} rozwiązanie powyższego równania można otrzymać na:
+    \begin{equation}
+        {n+k-1 \choose k-1}
+    \end{equation}
+    sposobów. Biorąc pod uwagę, iż mamy 5 zmiennych, dokonujemy podstawienia $k=5$ i dokonujemy odpowiednich obliczeń:
+    \begin{equation}
+        {n+5-1 \choose 5-1} = \frac{(n+4)!}{4!*(n+4-4)!} = \frac{(n+1)(n+2)(n+3)(n+4)}{24}
+    \end{equation}
+    na podstawie których wnioskujemy, iż mając n procesów osiągniemy konfigurację legalną w nie więcej niż $O(n^{4})$ krokach.
+\end{document}
